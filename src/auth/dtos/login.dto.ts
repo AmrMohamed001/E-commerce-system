@@ -1,12 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { Field, InputType } from '@nestjs/graphql';
 import { IsEmail, IsString, IsStrongPassword } from 'class-validator';
 
+@InputType()
 export class LoginDto {
 	@IsEmail()
-	@ApiProperty({ description: 'The email of the user' })
+	@Field()
 	email: string;
 
 	@IsString()
-	@ApiProperty({ description: 'The password of the user' })
+	@Field()
 	password: string;
 }

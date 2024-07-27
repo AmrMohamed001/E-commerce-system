@@ -9,16 +9,21 @@ import {
 } from 'typeorm';
 import { hash } from 'bcryptjs';
 import { BadRequestException } from '@nestjs/common';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 @Entity()
 @Index(['email'], { unique: true })
+@ObjectType()
 export class User {
 	@PrimaryGeneratedColumn()
+	@Field(() => Int)
 	id: number;
 
 	@Column({ unique: true })
+	@Field()
 	username: string;
 
 	@Column()
+	@Field()
 	email: string;
 
 	@Column()
@@ -31,6 +36,7 @@ export class User {
 	changePasswordAt: number;
 
 	@Column({ default: 'uploads/users/default.jpg' })
+	@Field({ nullable: true })
 	image: string;
 
 	@Column({ default: 'user' })
@@ -49,9 +55,11 @@ export class User {
 	otpExpiration: number;
 
 	@Column({ nullable: true })
+	@Field({ nullable: true })
 	phone: string;
 
 	@CreateDateColumn()
+	@Field({ nullable: true })
 	createdAt: Date;
 
 	@BeforeInsert()

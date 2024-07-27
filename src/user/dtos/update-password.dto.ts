@@ -1,17 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { Field, InputType } from '@nestjs/graphql';
 import { IsString, IsStrongPassword } from 'class-validator';
 
+@InputType()
 export class UpdatePasswordDto {
 	@IsString()
-	@ApiProperty({ description: 'The current password of the user' })
+	@Field()
 	password: string;
 
 	@IsString()
 	@IsStrongPassword()
-	@ApiProperty({ description: 'The new password of the user' })
+	@Field()
 	newPassword: string;
 
 	@IsString()
-	@ApiProperty({ description: 'The confirm new password of the user' })
+	@Field()
 	confirmNewPassword: string;
 }

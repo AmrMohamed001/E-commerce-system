@@ -1,32 +1,26 @@
-import { Module } from '@nestjs/common';
-import { ProductController } from './product.controller';
+import { forwardRef, Module } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from './product.entity';
 import { UploadModule } from 'src/upload/upload.module';
 import { UserModule } from 'src/user/user.module';
-import { MulterModule } from '@nestjs/platform-express';
-import { UploadService } from 'src/upload/upload.service';
 import { QueryService } from './query.service';
 import { CategoryModule } from 'src/category/category.module';
 import { SubcategoryModule } from 'src/subcategory/subcategory.module';
+import { ProductResolver } from './product.resolver';
+import { ProductLocalization } from './ProductLocalization.entity';
+import { TranslateModule } from 'src/translate/translate.module';
 
 @Module({
 	imports: [
-		TypeOrmModule.forFeature([Product]),
+		TypeOrmModule.forFeature([Product, ProductLocalization]),
 		UploadModule,
-		MulterModule.registerAsync({
-			imports: [UploadModule],
-			inject: [UploadService],
-			useFactory: (uploadService: UploadService) => {
-				return uploadService.getMulterOptions('products');
-			},
-		}),
 		UserModule,
 		CategoryModule,
 		SubcategoryModule,
+		TranslateModule,
 	],
-	controllers: [ProductController],
-	providers: [ProductService, QueryService],
+	providers: [ProductService, QueryService, ProductResolver],
+	exports: [ProductService],
 })
 export class ProductModule {}

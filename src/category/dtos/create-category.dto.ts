@@ -1,8 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { Field, InputType } from '@nestjs/graphql';
 
+import { IsAlpha, IsString } from 'class-validator';
+@InputType()
 export class CreateCategoryDto {
-	@IsString()
-	@ApiProperty({ description: 'The name of the category' })
-	readonly name: string;
+	@IsAlpha()
+	@Field()
+	name: string;
 }

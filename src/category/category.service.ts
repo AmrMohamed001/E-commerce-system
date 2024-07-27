@@ -1,14 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Category } from './category.entity';
 import { CreateCategoryDto } from './dtos/create-category.dto';
 import { UpdateCategoryDto } from './dtos/update-category.dto';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class CategoriesService {
 	constructor(
-		@InjectRepository(Category) private categoryRepo: Repository<Category>
+		@InjectRepository(Category) private categoryRepo: Repository<Category>,
+		private i18n: I18nService
 	) {}
 
 	async create(body: CreateCategoryDto) {
@@ -17,36 +19,45 @@ export class CategoriesService {
 	}
 
 	async findAll() {
-		return this.categoryRepo.find({ relations: ['products'] });
+		return this.categoryRepo.find();
 	}
 
-	async findOne(id: number) {
+	async findOne(id: number, lang?: string) {
 		const category = await this.categoryRepo.findOne({
 			where: { id },
-			relations: ['products'],
 		});
 		if (!category) {
-			throw new NotFoundException(`Category with ID ${id} not found`);
+			this.i18n.t('exceptions.CAT_NOT_FOUND', {
+				lang,
+			});
 		}
 		return category;
 	}
 
-	async update(id: number, body: UpdateCategoryDto) {
+	async update(id: number, body: UpdateCategoryDto, lang?: string) {
 		const category = await this.findOne(id);
 
 		if (!category) {
-			throw new NotFoundException(`Category with ID ${id} not found`);
+			this.i18n.t('exceptions.CAT_NOT_FOUND', {
+				lang,
+			});
 		}
 		Object.assign(category, body);
 
 		return this.categoryRepo.save(category);
 	}
 
-	async remove(id: number) {
+	async remove(id: number, lang?: string) {
 		const category = await this.findOne(id);
 		if (!category) {
-			throw new NotFoundException(`Category with ID ${id} not found`);
+			this.i18n.t('exceptions.CAT_NOT_FOUND', {
+				lang,
+			});
 		}
 		await this.categoryRepo.remove(category);
+	}
+
+	getCategoryByIds(categoryIds: number[]) {
+		return this.categoryRepo.find({ where: { id: In(categoryIds) } });
 	}
 }

@@ -1,0 +1,16 @@
+{
+	"NOT_FOUND_USER": "This User Is Not Found",
+	"CURRENT_PASS_IS_IN_CORRECT": "Current password is incorrect",
+	"CAT_NOT_FOUND": "Provided Category is Not Found",
+	"SUB_NOT_FOUND": "Provided Sub Category is Not Found",
+	"PRODUCT_NOT_FOUND": "Provided Product is Not Found",
+	"NOT_VALID_TOKEN": "Invalid token Provided",
+	"PASSWORD_AFTER_JWT": "User changed password after token was issued",
+	"JWT_EXPIRED": "JWT token has expired",
+	"ROLE_NOT_FOUND": "User role is not found",
+	"NOT_PERMITTED": "You do not have permission to access this resource",
+	"INTERNAL_SERVER_ERROR": "Internal server error",
+	"CREDENTIAL_ERROR": "email or password is wrong , try again",
+	"USER_BY_EMAIL": "User With this email address is not found",
+	"REQUIRE_EMAIL_VERIFICATION": "Email verification is required"
+}

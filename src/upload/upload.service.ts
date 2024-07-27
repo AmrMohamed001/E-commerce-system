@@ -1,32 +1,39 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-
+import { Injectable } from '@nestjs/common';
+import { join } from 'path';
+import { FileUpload } from 'graphql-upload-ts/dist/Upload';
+import { createWriteStream } from 'fs';
 @Injectable()
 export class UploadService {
-	customFileName(req, file, cb) {
-		const fileExtName = extname(file.originalname);
-		cb(null, `img-${req.user.id}-${Date.now()}${fileExtName}`);
+	async uploadPhoto(file: FileUpload, resource: string) {
+		let { createReadStream, filename } = file;
+		filename = `${Date.now()}-${filename}`;
+		const path = join(`public/uploads/${resource}`, filename);
+		const stream = createReadStream();
+		const out = createWriteStream(path);
+		stream.pipe(out);
+		await new Promise((resolve, reject) => {
+			out.on('finish', resolve);
+			out.on('error', reject);
+		});
+		return filename;
 	}
 
-	imageFileFilter(req, file, cb) {
-		if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-			return cb(
-				new BadRequestException('Only image files are allowed!'),
-				false
-			);
+	async uploadImages(files) {
+		const imageUrls = [];
+
+		for (const file of files) {
+			let { createReadStream, filename } = await file;
+			filename = `${Date.now()}-${filename}`;
+			const path = join(`public/uploads/products`, filename);
+			const stream = createReadStream();
+			const out = createWriteStream(path);
+			stream.pipe(out);
+			await new Promise((resolve, reject) => {
+				out.on('finish', resolve);
+				out.on('error', reject);
+			});
+			imageUrls.push(filename);
 		}
-		cb(null, true);
-	}
-
-	// Multer options
-	getMulterOptions(resource: string) {
-		return {
-			storage: diskStorage({
-				destination: `./public/uploads/${resource}`,
-				filename: this.customFileName,
-			}),
-			fileFilter: this.imageFileFilter,
-		};
+		return imageUrls;
 	}
 }

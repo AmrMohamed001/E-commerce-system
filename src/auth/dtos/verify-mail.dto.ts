@@ -1,13 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { Field, InputType, Int } from '@nestjs/graphql';
 import { IsEmail, IsString, Length } from 'class-validator';
 
+@InputType()
 export class VerifyEmailDto {
 	@IsEmail()
-	@ApiProperty({ description: 'The email of the user' })
+	@Field()
 	email: string;
 
 	@IsString()
 	@Length(6, 6)
-	@ApiProperty({ description: 'The otp sent to the user' })
+	@Field()
 	otp: string;
 }

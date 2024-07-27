@@ -1,14 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { Field, InputType, Int } from '@nestjs/graphql';
 import { IsString, IsInt } from 'class-validator';
 
+@InputType()
 export class CreateSubcategoryDto {
 	@IsString()
-	@ApiProperty({ description: 'The name of the subcategory' })
+	@Field()
 	name: string;
 
 	@IsInt()
-	@ApiProperty({
-		description: 'The ID of the category the subcategory belongs to',
-	})
+	@Field(() => Int)
 	categoryId: number;
 }

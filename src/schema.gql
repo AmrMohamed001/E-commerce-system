@@ -1,0 +1,214 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type SerializedUser {
+  id: Int!
+  username: String!
+  email: String!
+  phone: String
+  image: String
+  createdAt: DateTime
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type RegesterUser {
+  userId: Int!
+  email: String!
+}
+
+type verifyEmailType {
+  message: String!
+}
+
+type LoginType {
+  access_token: String!
+}
+
+type Subcategory {
+  id: Int!
+  name: String!
+  category: Category!
+  products: [Product!]!
+}
+
+type Category {
+  id: Int!
+  name: String!
+  subcategories: [Subcategory!]!
+  products: [Product!]!
+}
+
+type ProductLocalization {
+  id: Int!
+  languageCode: String!
+  title: String!
+  specifications: String!
+  description: String!
+}
+
+type Product {
+  id: Int!
+  localizations: [ProductLocalization!]!
+  price: Int!
+  quantity: Int!
+  imageCover: String
+  images: [String!]!
+  createdAt: DateTime!
+  category: Category
+  subcategory: Subcategory
+}
+
+type EntityWithId {
+  id: Int!
+}
+
+type LocalizedProduct {
+  id: Int!
+  price: String!
+  quantity: Int!
+  imageCover: String!
+  images: [String!]!
+  createdAt: DateTime!
+  category: Category
+  subcategory: Subcategory
+  languageCode: String!
+  title: String!
+  specifications: String!
+  description: String!
+}
+
+type GetProducts {
+  total: Int!
+  page: Int!
+  limit: Int!
+  data: [LocalizedProduct!]!
+}
+
+type Query {
+  me: SerializedUser!
+  user(id: Float!): SerializedUser!
+  users: [SerializedUser!]!
+  getProducts(query: QueryDto): GetProducts!
+  product(id: Float!): LocalizedProduct!
+  categories: [Category!]!
+  category(id: Int!): Category!
+  subs: [Subcategory!]!
+  sub(id: Int!): Subcategory!
+}
+
+input QueryDto {
+  page: Int
+  limit: Int
+  sort: String
+  order: String
+  search: String
+}
+
+type Mutation {
+  photoUpload(file: Upload): SerializedUser!
+  updateMe(input: UpdateUserDto!): SerializedUser!
+  updateUser(id: Float!, input: UpdateUserDto!): SerializedUser!
+  updateRole(id: Float!, role: String!): SerializedUser!
+  deleteUser(id: Float!): SerializedUser!
+  register(input: CreateUserDto!): RegesterUser!
+  verifyEmail(input: VerifyEmailDto!): verifyEmailType!
+  login(input: LoginDto!): LoginType!
+  updatePassword(input: UpdatePasswordDto!): LoginType!
+  forgetPassword(email: String!): RegesterUser!
+  resetPassword(input: ResetPasswordDto!): LoginType!
+  createProduct(body: CreateProductDto!, file: Upload, files: [Upload!]): Product!
+  updateProduct(id: Float!, body: UpdateProductDto!, file: Upload, files: [Upload!]): Product!
+  deleteProduct(id: Float!): EntityWithId!
+  addCategory(input: CreateCategoryDto!): Category!
+  editCategory(id: Int!, input: UpdateCategoryDto!): Category!
+  deleteCategory(id: Int!): EntityWithId!
+  addSub(input: CreateSubcategoryDto!): Subcategory!
+  updateSub(id: Int!, input: UpdateSubcategoryDto!): Subcategory!
+  deleteSub(id: Int!): EntityWithId!
+}
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
+
+input UpdateUserDto {
+  username: String
+  email: String
+  password: String
+  confirmPassword: String
+  phone: String
+  image: String
+}
+
+input CreateUserDto {
+  username: String!
+  email: String!
+  password: String!
+  confirmPassword: String!
+  phone: String
+  image: String
+}
+
+input VerifyEmailDto {
+  email: String!
+  otp: String!
+}
+
+input LoginDto {
+  email: String!
+  password: String!
+}
+
+input UpdatePasswordDto {
+  password: String!
+  newPassword: String!
+  confirmNewPassword: String!
+}
+
+input ResetPasswordDto {
+  email: String!
+  password: String!
+  confirmPassword: String!
+}
+
+input CreateProductDto {
+  title: String!
+  description: String!
+  specifications: String!
+  price: Int!
+  quantity: Int!
+  categoryId: Int!
+  subcategoryId: Int
+}
+
+input UpdateProductDto {
+  title: String
+  description: String
+  specifications: String
+  price: Int
+  quantity: Int
+  categoryId: Int
+  subcategoryId: Int
+}
+
+input CreateCategoryDto {
+  name: String!
+}
+
+input UpdateCategoryDto {
+  name: String
+}
+
+input CreateSubcategoryDto {
+  name: String!
+  categoryId: Int!
+}
+
+input UpdateSubcategoryDto {
+  name: String
+  categoryId: Int
+}

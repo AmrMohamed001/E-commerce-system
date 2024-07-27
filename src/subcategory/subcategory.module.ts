@@ -1,18 +1,19 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CategoryModule } from 'src/category/category.module';
 import { SubcategoriesService } from './subcategory.service';
-import { SubcategoriesController } from './subcategory.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Subcategory } from './subcategory.entity';
 import { UserModule } from 'src/user/user.module';
+import { SubCategoryResolver } from './subcategory.resolver';
+import { DataloaderModule } from 'src/dataloader/dataloader.module';
 
 @Module({
-	providers: [SubcategoriesService],
-	controllers: [SubcategoriesController],
+	providers: [SubcategoriesService, SubCategoryResolver],
 	imports: [
 		TypeOrmModule.forFeature([Subcategory]),
-		CategoryModule,
+		forwardRef(() => CategoryModule),
 		UserModule,
+		forwardRef(() => DataloaderModule),
 	],
 	exports: [SubcategoriesService],
 })

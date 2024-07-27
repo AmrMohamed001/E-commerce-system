@@ -20,12 +20,12 @@ export class QueryService {
 
 	applySort(
 		queryBuilder: SelectQueryBuilder<Product>,
-		sort?: string
+		sort?: string,
+		order?: string
 	): SelectQueryBuilder<Product> {
 		if (sort) {
-			const [key, order] = sort.split(':');
 			queryBuilder.orderBy(
-				`product.${key}`,
+				`product.${sort}`,
 				order.toUpperCase() as 'ASC' | 'DESC'
 			);
 		}

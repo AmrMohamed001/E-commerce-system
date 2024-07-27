@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { Field, InputType } from '@nestjs/graphql';
 import {
 	IsEmail,
 	IsNumber,
@@ -8,15 +8,15 @@ import {
 	IsStrongPassword,
 	Length,
 } from 'class-validator';
-
+@InputType()
 export class CreateUserDto {
 	@IsString()
 	@Length(5, 12)
-	@ApiProperty({ description: 'The username of the user' })
+	@Field()
 	username: string;
 
 	@IsEmail()
-	@ApiProperty({ description: 'The email of the user' })
+	@Field()
 	email: string;
 
 	@IsStrongPassword(
@@ -26,19 +26,19 @@ export class CreateUserDto {
 				'Please enter a strong password containing lowercase, uppercase, numbers, and symbols',
 		}
 	)
-	@ApiProperty({ description: 'The password of the user' })
+	@Field()
 	password: string;
 
 	@IsString()
-	@ApiProperty({ description: 'The confirm password of the user' })
+	@Field()
 	confirmPassword: string;
 
 	@IsPhoneNumber('EG')
 	@IsOptional()
-	@ApiProperty({ description: 'The phone number of the user' })
+	@Field({ nullable: true })
 	phone: string;
 
 	@IsOptional()
-	@ApiProperty({ description: 'The image of the user' })
+	@Field({ nullable: true })
 	image?: string;
 }
