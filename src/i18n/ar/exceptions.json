@@ -13,5 +13,6 @@
 	"INTERNAL_SERVER_ERROR": "خطأ في الخادم",
 	"CREDENTIAL_ERROR": "البريد الالكتروني او كلمة المرور غير صحيحة",
 	"USER_BY_EMAIL": "لم يتم العثور علي هذا البريد",
-	"REQUIRE_EMAIL_VERIFICATION": "التحقق من البريد الالكتروني مطلوب"
+	"REQUIRE_EMAIL_VERIFICATION": "التحقق من البريد الالكتروني مطلوب",
+	"LOC_NOT_FOUND": "لم يتم العثور علي هذا المنتج"
 }

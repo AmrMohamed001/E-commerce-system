@@ -34,6 +34,12 @@ export class CategoriesService {
 		return category;
 	}
 
+	findByProductId(productId: number) {
+		return this.categoryRepo.find({
+			where: { products: { id: productId } },
+		});
+	}
+
 	async update(id: number, body: UpdateCategoryDto, lang?: string) {
 		const category = await this.findOne(id);
 

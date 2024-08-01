@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';
 import { In, Repository } from 'typeorm';
-import { CreateProductDto } from './dtos/create-product.dto';
-import { UpdateProductDto } from './dtos/update-product.dto';
+import { CreateProductInput } from './dtos/create-product.dto';
+import { UpdateProductInput } from './dtos/update-product.dto';
 import { QueryService } from './query.service';
 import { CategoriesService } from 'src/category/category.service';
 import { SubcategoriesService } from 'src/subcategory/subcategory.service';
@@ -11,7 +15,8 @@ import { Subcategory } from 'src/subcategory/subcategory.entity';
 import { QueryDto } from './dtos/query.dto';
 import { ProductLocalization } from './ProductLocalization.entity';
 import { TranslationService } from 'src/translate/translate.service';
-import { I18nService } from 'nestjs-i18n';
+import { I18nService, logger } from 'nestjs-i18n';
+import { LanguagesService } from 'src/languages/languages.service';
 
 @Injectable()
 export class ProductService {
@@ -19,55 +24,33 @@ export class ProductService {
 		@InjectRepository(Product) private productRepo: Repository<Product>,
 		@InjectRepository(ProductLocalization)
 		private readonly localizationRepository: Repository<ProductLocalization>,
-		private translateService: TranslationService,
 		private queryService: QueryService,
 		private categoryService: CategoriesService,
 		private subCategoryService: SubcategoriesService,
+		private langService: LanguagesService,
 		private readonly i18n: I18nService
 	) {}
 
-	async findAll(lang: string, queryOpt?: QueryDto) {
-		let queryBuilder = this.productRepo
-			.createQueryBuilder('product')
-			.leftJoinAndSelect('product.localizations', 'localization');
+	async findAll(lang: string) {
+		const result: any = [];
 
-		// Apply search, sort, and pagination
-		queryBuilder = this.queryService.applySearch(queryBuilder, queryOpt.search);
+		const localizedProducts = await this.productRepo.find({
+			relations: ['localizations'],
+		});
 
-		queryBuilder = this.queryService.applySort(
-			queryBuilder,
-			queryOpt.sort,
-			queryOpt.order
-		);
-
-		queryBuilder = this.queryService.applyPagination(
-			queryBuilder,
-			queryOpt.page || 1,
-			queryOpt.limit || 10
-		);
-
-		const total = await queryBuilder.getCount();
-		const products = await queryBuilder.getMany();
-
-		const data = products.map(async (product) => {
-			const localized = (await product.localizations).find(
+		localizedProducts.map((product) => {
+			//@ts-ignore
+			const localization = product.__localizations__.find(
 				(loc) => loc.languageCode === lang
 			);
 
-			return {
+			result.push({
 				...product,
-				title: localized.title,
-				specifications: localized.specifications,
-				description: localized.description,
-			};
+				...localization,
+				__localizations__: undefined,
+			});
 		});
-
-		return {
-			total,
-			page: queryOpt.page || 1,
-			limit: queryOpt.limit || 10,
-			data,
-		};
+		return result;
 	}
 	async findOne(id: number, lang: string) {
 		const product = await this.productRepo.findOne({
@@ -75,13 +58,28 @@ export class ProductService {
 			relations: ['category', 'subcategory'],
 		});
 
+		if (!product) {
+			throw new NotFoundException(this.i18n.t('exceptions.PRODUCT_NOT_FOUND'));
+		}
+
+		const localization = await this.localizationRepository.findOne({
+			//@ts-ignore
+			where: { product: product.id, languageCode: lang },
+		});
+
+		if (!localization) {
+			throw new NotFoundException(this.i18n.t('exceptions.PRODUCT_NOT_FOUND'));
+		}
+
 		return {
 			...product,
-			...(await product.localizations).find((p) => p.languageCode === lang),
+			...localization,
 		};
 	}
-	async create(body: CreateProductDto, lang: string = 'en') {
-		const category = await this.categoryService.findOne(body.categoryId);
+
+	async create(input: CreateProductInput, lang?: string) {
+		// check category
+		const category = await this.categoryService.findOne(input.categoryId);
 		if (!category) {
 			throw new NotFoundException(
 				this.i18n.t('exceptions.CAT_NOT_FOUND', {
@@ -90,9 +88,10 @@ export class ProductService {
 			);
 		}
 
+		// check subcategory
 		let subcategory: Subcategory | null = null;
-		if (body.subcategoryId) {
-			subcategory = await this.subCategoryService.findOne(body.subcategoryId);
+		if (input.subcategoryId) {
+			subcategory = await this.subCategoryService.findOne(input.subcategoryId);
 			if (!subcategory) {
 				throw new NotFoundException(
 					this.i18n.t('exceptions.SUB_NOT_FOUND', {
@@ -102,46 +101,49 @@ export class ProductService {
 			}
 		}
 
+		// check languages exist in the system
+		for (const item of input.body) {
+			let currentLang = item.language;
+
+			const language = await this.langService.findByLanguage(currentLang);
+
+			if (!language)
+				throw new BadRequestException(
+					`Language ${currentLang} not found in the language list`
+				);
+		}
+
+		// create product
 		const product = this.productRepo.create({
-			price: body.price,
-			quantity: body.quantity,
-			imageCover: body.imageCover,
-			images: body.images,
+			price: input.price,
+			quantity: input.quantity,
+			imageCover: input.imageCover,
+			images: input.images,
 			category,
 			subcategory,
 		});
 
 		const savedProduct = await this.productRepo.save(product);
 
-		const languages = ['en', 'ar'];
-		for (const lang of languages) {
-			const title =
-				lang === 'en'
-					? body.title
-					: await this.translateService.translateText(body.title, lang);
-			const specifications =
-				lang === 'en'
-					? body.specifications
-					: await this.translateService.translateText(
-							body.specifications,
-							lang
-						);
-			const description =
-				lang === 'en'
-					? body.description
-					: await this.translateService.translateText(body.description, lang);
+		// create localization
 
-			return this.localizationRepository.save({
+		for (const item of input.body) {
+			const localization = this.localizationRepository.create({
+				languageCode: item.language,
+				title: item.localization.title,
+				specifications: item.localization.specifications,
+				description: item.localization.description,
 				product: savedProduct,
-				languageCode: lang,
-				title,
-				specifications,
-				description,
 			});
+
+			await this.localizationRepository.save(localization);
 		}
+
+		return { message: 'Product created successfully' };
 	}
-	async findOneAndUpdate(id: number, body: UpdateProductDto, lang: string) {
-		let newBody: any = { ...body };
+	async findOneAndUpdate(id: number, input: UpdateProductInput, lang: string) {
+		let newBody: any = { ...input };
+		// check product
 		const product = await this.productRepo.findOne({ where: { id } });
 		if (!product)
 			throw new NotFoundException(
@@ -150,8 +152,9 @@ export class ProductService {
 				})
 			);
 
-		if (body.categoryId) {
-			const category = await this.categoryService.findOne(body.categoryId);
+		// check category
+		if (input.categoryId) {
+			const category = await this.categoryService.findOne(input.categoryId);
 			if (!category) {
 				throw new NotFoundException(
 					this.i18n.t('exceptions.CAT_NOT_FOUND', {
@@ -159,13 +162,13 @@ export class ProductService {
 					})
 				);
 			}
-
 			newBody.category = category;
 		}
 
-		if (body.subcategoryId) {
+		// check subcategory
+		if (input.subcategoryId) {
 			const subCategory = await this.subCategoryService.findOne(
-				body.subcategoryId
+				input.subcategoryId
 			);
 			if (!subCategory) {
 				throw new NotFoundException(
@@ -174,63 +177,41 @@ export class ProductService {
 					})
 				);
 			}
-
 			newBody.subcategory = subCategory;
 		}
 
-		const localizedFields = ['title', 'specifications', 'description'];
-		const nonLocalizedFields = Object.keys(body).filter(
-			(field) => !localizedFields.includes(field)
-		);
-
-		nonLocalizedFields.forEach((field) => {
-			product[field] = body[field];
+		// update product
+		Object.assign(product, {
+			...newBody,
+			price: input.price,
+			quantity: input.quantity,
+			updatedAt: new Date(),
 		});
 		await this.productRepo.save(product);
 
-		let localizations = await this.localizationRepository.find({
-			where: { product: { id } },
-		});
-
-		const languages = ['en', 'ar'];
-		for (const lang of languages) {
-			const existingLocalization = localizations.find(
-				(localization) => localization.languageCode === lang
-			);
-
-			const title =
-				lang === 'en'
-					? body.title
-					: await this.translateService.translateText(body.title, lang);
-			const specifications =
-				lang === 'en'
-					? body.specifications
-					: await this.translateService.translateText(
-							body.specifications,
-							lang
-						);
-			const description =
-				lang === 'en'
-					? body.description
-					: await this.translateService.translateText(body.description, lang);
-
-			if (existingLocalization) {
-				existingLocalization.title = title;
-				existingLocalization.specifications = specifications;
-				existingLocalization.description = description;
-				await this.localizationRepository.save(existingLocalization);
-			} else {
-				await this.localizationRepository.save({
-					product: product,
-					languageCode: lang,
-					title,
-					specifications,
-					description,
+		if (input.body) {
+			const localization = await this.localizationRepository.findOne({
+				where: { product: { id: product.id } },
+			});
+			if (!localization) {
+				throw new NotFoundException(
+					this.i18n.t('exceptions.LOC_NOT_FOUND', {
+						lang,
+					})
+				);
+			}
+			for (const item of input.body) {
+				Object.assign(localization, {
+					languageCode: item.language,
+					title: item.localization.title,
+					specifications: item.localization.specifications,
+					description: item.localization.description,
 				});
+				await this.localizationRepository.save(localization);
 			}
 		}
 
-		return product;
+		return { message: 'Product updated successfully' };
 	}
 
 	async findOneAndDelete(id: number, lang?: string) {

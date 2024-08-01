@@ -59,8 +59,15 @@ type Product {
   imageCover: String
   images: [String!]!
   createdAt: DateTime!
+  updatedAt: DateTime!
   category: Category
   subcategory: Subcategory
+}
+
+type Language {
+  id: Int!
+  language: String!
+  isDefault: Boolean!
 }
 
 type EntityWithId {
@@ -80,33 +87,29 @@ type LocalizedProduct {
   title: String!
   specifications: String!
   description: String!
+  updatedAt: DateTime!
 }
 
-type GetProducts {
-  total: Int!
-  page: Int!
-  limit: Int!
-  data: [LocalizedProduct!]!
+type ProductCreated {
+  message: String!
+}
+
+type CreateProductType {
+  message: String!
 }
 
 type Query {
   me: SerializedUser!
   user(id: Float!): SerializedUser!
   users: [SerializedUser!]!
-  getProducts(query: QueryDto): GetProducts!
+  getProducts: [LocalizedProduct!]!
   product(id: Float!): LocalizedProduct!
   categories: [Category!]!
   category(id: Int!): Category!
   subs: [Subcategory!]!
   sub(id: Int!): Subcategory!
-}
-
-input QueryDto {
-  page: Int
-  limit: Int
-  sort: String
-  order: String
-  search: String
+  languages: [Language!]!
+  language(id: Int!): Language!
 }
 
 type Mutation {
@@ -121,8 +124,8 @@ type Mutation {
   updatePassword(input: UpdatePasswordDto!): LoginType!
   forgetPassword(email: String!): RegesterUser!
   resetPassword(input: ResetPasswordDto!): LoginType!
-  createProduct(body: CreateProductDto!, file: Upload, files: [Upload!]): Product!
-  updateProduct(id: Float!, body: UpdateProductDto!, file: Upload, files: [Upload!]): Product!
+  createProduct(input: CreateProductInput!, file: Upload, files: [Upload!]): ProductCreated!
+  updateProduct(id: Float!, input: UpdateProductInput!, file: Upload, files: [Upload!]): ProductCreated!
   deleteProduct(id: Float!): EntityWithId!
   addCategory(input: CreateCategoryDto!): Category!
   editCategory(id: Int!, input: UpdateCategoryDto!): Category!
@@ -130,6 +133,9 @@ type Mutation {
   addSub(input: CreateSubcategoryDto!): Subcategory!
   updateSub(id: Int!, input: UpdateSubcategoryDto!): Subcategory!
   deleteSub(id: Int!): EntityWithId!
+  createLanguage(input: CreateLanguageInput!): CreateProductType!
+  updateLanguage(id: Float!, updateLanguageInput: UpdateLanguageInput!): Language!
+  removeLanguage(id: Int!): Language!
 }
 
 """The `Upload` scalar type represents a file upload."""
@@ -139,7 +145,6 @@ input UpdateUserDto {
   username: String
   email: String
   password: String
-  confirmPassword: String
   phone: String
   image: String
 }
@@ -148,7 +153,6 @@ input CreateUserDto {
   username: String!
   email: String!
   password: String!
-  confirmPassword: String!
   phone: String
   image: String
 }
@@ -166,33 +170,49 @@ input LoginDto {
 input UpdatePasswordDto {
   password: String!
   newPassword: String!
-  confirmNewPassword: String!
 }
 
 input ResetPasswordDto {
   email: String!
   password: String!
-  confirmPassword: String!
 }
 
-input CreateProductDto {
-  title: String!
-  description: String!
-  specifications: String!
+input CreateProductInput {
+  body: [ProductBodyInput!]!
   price: Int!
   quantity: Int!
   categoryId: Int!
   subcategoryId: Int
 }
 
-input UpdateProductDto {
-  title: String
-  description: String
-  specifications: String
+input ProductBodyInput {
+  language: String!
+  localization: LocalizationInput!
+}
+
+input LocalizationInput {
+  title: String!
+  description: String!
+  specifications: String!
+}
+
+input UpdateProductInput {
+  body: [ProductBodyInputUpdate!]
   price: Int
   quantity: Int
   categoryId: Int
   subcategoryId: Int
+}
+
+input ProductBodyInputUpdate {
+  language: String
+  localization: LocalizationInputUpdate
+}
+
+input LocalizationInputUpdate {
+  title: String
+  description: String
+  specifications: String
 }
 
 input CreateCategoryDto {
@@ -211,4 +231,14 @@ input CreateSubcategoryDto {
 input UpdateSubcategoryDto {
   name: String
   categoryId: Int
+}
+
+input CreateLanguageInput {
+  language: String!
+  isDefault: Boolean
+}
+
+input UpdateLanguageInput {
+  language: String
+  isDefault: Boolean
 }

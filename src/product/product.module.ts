@@ -10,6 +10,8 @@ import { SubcategoryModule } from 'src/subcategory/subcategory.module';
 import { ProductResolver } from './product.resolver';
 import { ProductLocalization } from './ProductLocalization.entity';
 import { TranslateModule } from 'src/translate/translate.module';
+import { LanguagesModule } from 'src/languages/languages.module';
+import { DataloaderModule } from 'src/dataloader/dataloader.module';
 
 @Module({
 	imports: [
@@ -19,6 +21,8 @@ import { TranslateModule } from 'src/translate/translate.module';
 		CategoryModule,
 		SubcategoryModule,
 		TranslateModule,
+		LanguagesModule,
+		DataloaderModule,
 	],
 	providers: [ProductService, QueryService, ProductResolver],
 	exports: [ProductService],

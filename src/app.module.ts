@@ -32,6 +32,9 @@ import {
 import * as path from 'path';
 import { CustomI18nResolver } from './shared/resolvers/custom-i18n.resolver';
 import { DataloaderModule } from './dataloader/dataloader.module';
+import { LanguagesModule } from './languages/languages.module';
+import { SetLangModule } from './shared/middleware/setLand.module';
+import { SetLangMiddleware } from './shared/middleware/set-lang.middleware';
 @Module({
 	imports: [
 		GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -74,6 +77,8 @@ import { DataloaderModule } from './dataloader/dataloader.module';
 		SubcategoryModule,
 		TranslateModule,
 		DataloaderModule,
+		LanguagesModule,
+		SetLangModule,
 	],
 	providers: [
 		{

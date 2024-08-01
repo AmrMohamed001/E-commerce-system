@@ -47,6 +47,10 @@ export class Product {
 	@Field(() => Date)
 	createdAt: Date;
 
+	@Column({ nullable: true, type: 'timestamp with time zone' })
+	@Field(() => Date)
+	updatedAt: Date;
+
 	@ManyToOne(() => Category, (category) => category.products)
 	@Field(() => Category, { nullable: true })
 	category: Category;

@@ -33,18 +33,24 @@ export class UserService {
 		return this.userRepo.findOne({ where: { email } });
 	}
 
+	save(data: any) {
+		return this.userRepo.save(data);
+	}
+
 	async findById(id: number, lang?: string) {
 		const user = this.userRepo.findOne({ where: { id } });
 		if (!user)
-			throw new NotFoundException(this.i18n.t('exceptions.NOT_FOUND_USER',{lang}));
-		return user
+			throw new NotFoundException(
+				this.i18n.t('exceptions.NOT_FOUND_USER', { lang })
+			);
+		return user;
 	}
 
 	getProfile(userId: number) {
 		return this.findById(userId);
 	}
 	async updateUserPassword(id: number, body: UpdatePasswordDto, lang?: string) {
-		const { password, newPassword, confirmNewPassword } = body;
+		const { password, newPassword } = body;
 		const user = await this.findById(id);
 
 		if (!user)
@@ -58,7 +64,6 @@ export class UserService {
 			);
 
 		user.password = newPassword;
-		user.confirmPassword = confirmNewPassword;
 		user.changePasswordAt = Date.now();
 		return this.userRepo.save(user);
 	}
@@ -67,8 +72,7 @@ export class UserService {
 		id: number,
 		body: UpdateUserDto,
 		lang?: string,
-		opt?: Options,
-		
+		opt?: Options
 	) {
 		const user = await this.findById(id);
 		if (!user)

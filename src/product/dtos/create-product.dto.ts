@@ -1,8 +1,16 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+	IsArray,
+	IsInt,
+	IsNumber,
+	IsObject,
+	IsOptional,
+	IsString,
+} from 'class-validator';
 import { Field, InputType, Int } from '@nestjs/graphql';
+
 @InputType()
-export class CreateProductDto {
+class LocalizationInput {
 	@Field()
 	@IsString()
 	title: string;
@@ -14,6 +22,26 @@ export class CreateProductDto {
 	@Field()
 	@IsString()
 	specifications: string;
+}
+
+@InputType()
+class ProductBodyInput {
+	@IsString()
+	@Field(() => String)
+	language: string;
+
+	@Field(() => LocalizationInput)
+	@Type(() => LocalizationInput)
+	@IsObject()
+	localization: LocalizationInput;
+}
+
+@InputType()
+export class CreateProductInput {
+	@Field(() => [ProductBodyInput])
+	@Type(() => ProductBodyInput)
+	@IsArray()
+	body: ProductBodyInput[];
 
 	@IsNumber()
 	@Type(() => Number)
@@ -36,7 +64,6 @@ export class CreateProductDto {
 	@Field(() => Int, { nullable: true })
 	subcategoryId?: number;
 
-	imageCover?: string;
-
-	images?: string[];
+	imageCover: string;
+	images: string[];
 }

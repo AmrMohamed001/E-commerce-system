@@ -12,5 +12,6 @@
 	"INTERNAL_SERVER_ERROR": "Internal server error",
 	"CREDENTIAL_ERROR": "email or password is wrong , try again",
 	"USER_BY_EMAIL": "User With this email address is not found",
-	"REQUIRE_EMAIL_VERIFICATION": "Email verification is required"
+	"REQUIRE_EMAIL_VERIFICATION": "Email verification is required",
+	"LOC_NOT_FOUND": "Localization Not Found"
 }

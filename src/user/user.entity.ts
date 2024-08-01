@@ -29,9 +29,6 @@ export class User {
 	@Column()
 	password: string;
 
-	@Column({ nullable: true })
-	confirmPassword: string;
-
 	@Column('bigint', { nullable: true })
 	changePasswordAt: number;
 
@@ -64,19 +61,10 @@ export class User {
 
 	@BeforeInsert()
 	@BeforeUpdate()
-	async validatePasswords() {
-		if (this.password !== this.confirmPassword) {
-			throw new BadRequestException('Passwords do not match confirmation');
-		}
-	}
-
-	@BeforeInsert()
-	@BeforeUpdate()
 	async hashPassword() {
 		if (!this.password) {
 			throw new BadRequestException('Password is required');
 		}
 		this.password = await hash(this.password, 12);
-		this.confirmPassword = undefined;
 	}
 }

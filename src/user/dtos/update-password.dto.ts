@@ -11,8 +11,4 @@ export class UpdatePasswordDto {
 	@IsStrongPassword()
 	@Field()
 	newPassword: string;
-
-	@IsString()
-	@Field()
-	confirmNewPassword: string;
 }

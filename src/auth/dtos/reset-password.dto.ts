@@ -16,8 +16,4 @@ export class ResetPasswordDto {
 	)
 	@Field()
 	password: string;
-
-	@IsString()
-	@Field()
-	confirmPassword: string;
 }

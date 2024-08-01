@@ -53,4 +53,15 @@ export class DataloaderService {
 
 		return catIds.map((id) => subcategoryMap.get(id));
 	});
+
+	getCategoryByProductId = new DataLoader(async (catIds: number[]) => {
+		const categories = await this.categoryService.getCategoryByIds(catIds);
+		const catMap = new Map(
+			catIds.map((catId) => [
+				catId,
+				categories.filter((category) => category.id === catId),
+			])
+		);
+		return catIds.map((catId) => catMap.get(catId));
+	});
 }

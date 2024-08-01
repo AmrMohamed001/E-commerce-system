@@ -35,7 +35,7 @@ export class AuthService {
 		try {
 			this.sendVerificationEmail(body.email, otp);
 		} catch (err) {
-			this.userService.deleteUser(user.id);
+			await this.userService.deleteUser(user.id);
 			throw new InternalServerErrorException(
 				this.i18n.t('exceptions.INTERNAL_SERVER_ERROR', {
 					lang,
@@ -52,9 +52,7 @@ export class AuthService {
 			user.isVerified = true;
 			user.otp = null;
 			user.otpExpiration = null;
-			await this.userService.updateUser(user.id, user, undefined, {
-				listeners: false,
-			});
+			await this.userService.save(user);
 
 			return { message: 'Email verified successfully' };
 		}
@@ -94,8 +92,8 @@ export class AuthService {
 		return this.signToken(result);
 	}
 
-	sendVerificationEmail(email: string, otp: string) {
-		this.mailService.sendVerificationEmail(
+	async sendVerificationEmail(email: string, otp: string) {
+		await this.mailService.sendVerificationEmail(
 			email,
 			'Email Verification',
 			`Your OTP for email verification is ${otp}`
@@ -118,16 +116,14 @@ export class AuthService {
 		const { hashedOtp, otp } = this.generateOtp();
 		user.otp = hashedOtp;
 		user.otpExpiration = Date.now() + 10 * 60 * 1000;
-		user.isVerified = false;
 		await this.userService.updateUser(user.id, user, undefined, {
 			listeners: false,
 		});
 		try {
-			this.sendVerificationEmail(email, otp);
+			await this.sendVerificationEmail(email, otp);
 		} catch (err) {
 			user.otp = null;
 			user.otpExpiration = null;
-			user.isVerified = false;
 			await this.userService.updateUser(user.id, user, undefined, {
 				listeners: false,
 			});
@@ -141,7 +137,7 @@ export class AuthService {
 	}
 
 	async resetPassword(body: ResetPasswordDto, lang?: string) {
-		const { email, password, confirmPassword } = body;
+		const { email, password } = body;
 		const user = await this.userService.findByEmail(email);
 		if (!user)
 			throw new NotFoundException(
@@ -159,7 +155,6 @@ export class AuthService {
 			);
 
 		user.password = password;
-		user.confirmPassword = confirmPassword;
 		user.changePasswordAt = Date.now();
 		await this.userService.updateUser(user.id, user);
 		return this.signToken(user);

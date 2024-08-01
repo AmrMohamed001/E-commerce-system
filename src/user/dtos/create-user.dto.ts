@@ -29,10 +29,6 @@ export class CreateUserDto {
 	@Field()
 	password: string;
 
-	@IsString()
-	@Field()
-	confirmPassword: string;
-
 	@IsPhoneNumber('EG')
 	@IsOptional()
 	@Field({ nullable: true })

@@ -10,7 +10,8 @@ async function bootstrap() {
 	app.setGlobalPrefix('api');
 	app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 	app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
-	app.use(new SetLangMiddleware().use);
+	const setLangMiddleware = app.get(SetLangMiddleware);
+	app.use(setLangMiddleware.use.bind(setLangMiddleware)); 
 	app.use(helmet());
 	await app.listen(3000);
 }
