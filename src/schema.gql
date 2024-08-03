@@ -90,6 +90,13 @@ type LocalizedProduct {
   updatedAt: DateTime!
 }
 
+type GetProducts {
+  total: Int!
+  page: Int!
+  limit: Int!
+  data: [LocalizedProduct!]!
+}
+
 type ProductCreated {
   message: String!
 }
@@ -102,7 +109,7 @@ type Query {
   me: SerializedUser!
   user(id: Float!): SerializedUser!
   users: [SerializedUser!]!
-  getProducts: [LocalizedProduct!]!
+  getProducts(query: QueryDto): GetProducts!
   product(id: Float!): LocalizedProduct!
   categories: [Category!]!
   category(id: Int!): Category!
@@ -110,6 +117,12 @@ type Query {
   sub(id: Int!): Subcategory!
   languages: [Language!]!
   language(id: Int!): Language!
+}
+
+input QueryDto {
+  page: Int
+  limit: Int
+  search: String
 }
 
 type Mutation {

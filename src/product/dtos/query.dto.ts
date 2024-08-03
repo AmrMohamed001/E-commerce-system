@@ -16,15 +16,5 @@ export class QueryDto {
 	@Field({ nullable: true })
 	@IsString()
 	@IsOptional()
-	sort?: string;
-
-	@Field({ nullable: true })
-	@IsString()
-	@IsOptional()
-	order?: string;
-
-	@Field({ nullable: true })
-	@IsString()
-	@IsOptional()
 	search?: string;
 }

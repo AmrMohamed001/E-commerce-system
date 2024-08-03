@@ -5,18 +5,19 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';
-import { In, Repository } from 'typeorm';
+import { In, Repository, Like } from 'typeorm';
 import { CreateProductInput } from './dtos/create-product.dto';
 import { UpdateProductInput } from './dtos/update-product.dto';
 import { QueryService } from './query.service';
 import { CategoriesService } from 'src/category/category.service';
 import { SubcategoriesService } from 'src/subcategory/subcategory.service';
 import { Subcategory } from 'src/subcategory/subcategory.entity';
-import { QueryDto } from './dtos/query.dto';
+
 import { ProductLocalization } from './ProductLocalization.entity';
 import { TranslationService } from 'src/translate/translate.service';
 import { I18nService, logger } from 'nestjs-i18n';
 import { LanguagesService } from 'src/languages/languages.service';
+import { QueryDto } from './dtos/query.dto';
 
 @Injectable()
 export class ProductService {
@@ -31,27 +32,57 @@ export class ProductService {
 		private readonly i18n: I18nService
 	) {}
 
-	async findAll(lang: string) {
-		const result: any = [];
+	async findAll(lang: string, queryDto?: QueryDto) {
+		const { page = 1, limit = 10, search } = queryDto || {};
 
-		const localizedProducts = await this.productRepo.find({
+		// Apply pagination
+		const take = limit;
+		const skip = (page - 1) * limit;
+
+		const where = search
+			? {
+					localizations: {
+						title: Like(`%${search}%`),
+						languageCode: lang,
+					},
+				}
+			: { localizations: { languageCode: lang } };
+
+		const [products, total] = await this.productRepo.findAndCount({
+			where,
 			relations: ['localizations'],
+			take,
+			skip,
 		});
 
-		localizedProducts.map((product) => {
-			//@ts-ignore
-			const localization = product.__localizations__.find(
+		const result = products.map(async (product) => {
+			let localization = (await product.localizations).find(
 				(loc) => loc.languageCode === lang
 			);
 
-			result.push({
+			// return localization with default lang if required lang is not exist
+			if (!localization) {
+				const defaultLanguage = (await this.langService.findDefault()).language;
+				localization = (await product.localizations).find(
+					(loc) => loc.languageCode === defaultLanguage
+				);
+			}
+
+			return {
 				...product,
 				...localization,
-				__localizations__: undefined,
-			});
+				localizations: undefined,
+			};
 		});
-		return result;
+
+		return {
+			data: result,
+			total,
+			page,
+			limit,
+		};
 	}
+
 	async findOne(id: number, lang: string) {
 		const product = await this.productRepo.findOne({
 			where: { id },

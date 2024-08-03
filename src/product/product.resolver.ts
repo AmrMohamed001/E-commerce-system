@@ -34,9 +34,12 @@ export class ProductResolver {
 		private dataLoader: DataloaderService
 	) {}
 
-	@Query(() => [LocalizedProduct])
-	async getProducts(@Lang() lang: string) {
-		return this.productService.findAll(lang);
+	@Query(() => GetProducts)
+	async getProducts(
+		@Lang() lang: string,
+		@Args('query', { nullable: true, type: () => QueryDto }) queryDto: QueryDto
+	) {
+		return this.productService.findAll(lang, queryDto);
 	}
 
 	@Query(() => LocalizedProduct)
